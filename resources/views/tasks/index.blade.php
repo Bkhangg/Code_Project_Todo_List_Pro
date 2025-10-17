@@ -14,6 +14,8 @@
                     <th>Công việc</th>
                     <th>Hạn chót</th>
                     <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                    <th>Người tạo</th>
                     <th class="text-end">Hành động</th>
                 </tr>
             </thead>
@@ -40,6 +42,12 @@
                                 @break
                         @endswitch
                     </td>
+                    <td>
+                        {{ $task->created_at->format('Y-m-d') }}
+                    </td>
+                    <td>
+                        {{ $task->user->name }}
+                    </td>
                     <td class="text-end">
                         <a href="{{ route('tasks.show', $task->id) }}" class="btn btn-sm btn-info text-white">Xem</a>
                         <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-sm btn-warning">Sửa</a>
@@ -51,10 +59,13 @@
                     </td>
                 </tr>
                 @empty
-                    <td class="text-center" colspan="5">Không có tasks nào trong đây.</td>
+                    <td class="text-center" colspan="7">Không có tasks nào trong đây.</td>
                 @endforelse
             </tbody>
         </table>
+        <div class="center">
+            {{ $tasks->links('') }}
+        </div>
     </div>
 </div>
 @endsection
