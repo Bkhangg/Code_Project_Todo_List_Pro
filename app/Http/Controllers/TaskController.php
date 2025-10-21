@@ -125,4 +125,23 @@ class TaskController extends Controller
 
         return redirect()->route('tasks.index')->with('success', 'Đã xoá công việc thành công!');
     }
+
+    // Cập nhật code thay đổi status bằng ajax
+    public function updateStatus(Request $request, $id) {
+        $validate = $request->validate([
+            'status' => 'required|in:0,1,2',
+        ]);
+
+        $task = Task::findOrFail($id);
+
+        $task->update([
+            'status' => $validate['status'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái thành công!',
+            'status' => $task->status,
+        ]);
+    }
 }

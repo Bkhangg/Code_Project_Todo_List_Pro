@@ -7,7 +7,7 @@
             <div class="d-flex gap-2">
                 <a href="{{ route('tasks.create') }}" class="btn btn-sm btn-primary">+ Thêm Task</a>
                 @if (request()->has('search') || request()->has('status') || request()->has('sort_option'))
-                    <a href="{{ route('tasks.index') }}" class="btn btn-sm btn-danger">+ Xóa bộ lọc</a>
+                    <a href="{{ route('tasks.index') }}" class="btn btn-sm btn-danger">x Xóa bộ lọc</a>
                 @endif
             </div>
         </div>
@@ -51,6 +51,7 @@
                         <th>Công việc</th>
                         <th>Hạn chót</th>
                         <th>Trạng thái</th>
+                        <th></th>
                         <th>Thời gian tạo</th>
                         <th>Người tạo</th>
                         <th class="text-end">Hành động</th>
@@ -59,22 +60,22 @@
                 <tbody>
                     <!-- Demo static -->
                     @forelse ($tasks as $task)
-                        <tr>
+                        <tr data-id="{{ $task->id }}">
                             <td>{{ $task->id }}</td>
                             <td>{{ $task->title }}</td>
-                            <td>{{ $task->due_date ? $task->due_date : 'Chưa thêm date' }}</td>
+                            <td>{{ $task->due_date->format('d-m-Y') ? $task->due_date->format('d-m-Y') : 'Chưa thêm date' }}</td>
                             <td>
                                 @switch($task->status)
                                     @case(0)
-                                        <span class="badge bg-primary">Đang bắt đầu</span>
+                                        <span class="badge bg-primary badge-status">Chưa bắt đầu</span>
                                     @break
 
                                     @case(1)
-                                        <span class="badge bg-warning">Đang Làm</span>
+                                        <span class="badge bg-warning badge-status">Đang Làm</span>
                                     @break
 
                                     @case(2)
-                                        <span class="badge bg-success">Hoàn thành</span>
+                                        <span class="badge bg-success badge-status">Hoàn thành</span>
                                     @break
 
                                     @default
@@ -83,7 +84,19 @@
                                 @endswitch
                             </td>
                             <td>
-                                {{ $task->created_at->format('Y-m-d') }}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                        Đổi trạng thái
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item change-status" data-status="0">Chưa làm</a></li>
+                                        <li><a class="dropdown-item change-status" data-status="1">Đang làm</a></li>
+                                        <li><a class="dropdown-item change-status" data-status="2">Hoàn thành</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                {{ $task->created_at->format('d-m-Y') }}
                             </td>
                             <td>
                                 {{ $task->user->name }}
@@ -112,3 +125,55 @@
             </div>
         </div>
     @endsection
+
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                $('.change-status').click(function(e){
+                    e.preventDefault()
+
+                    const taskRow = $(this).closest('tr')
+                    const taskId = taskRow.data('id')
+                    const newStatus = $(this).data('status')
+
+                    $.ajax({
+                        url : `/tasks/${taskId}/status`,
+                        type: 'PATCH',
+                        data: {
+                            status: newStatus,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response){
+                            if(response.success) {
+                                const badge = taskRow.find('.badge-status')
+                                let badgeText = '';
+                                let badgeClass = 'badge ';
+
+                                switch (response.status) {
+                                    case '0':
+                                        badgeText = 'Chưa bắt đầu';
+                                        badgeClass += 'bg-primary';
+                                        break;
+                                    case '1':
+                                        badgeText = 'Đang làm';
+                                        badgeClass += 'bg-danger';
+                                        break;
+                                    case '2':
+                                        badgeText = 'Hoàn thành';
+                                        badgeClass += 'bg-success';
+                                        break;
+                                }
+
+                                badge.attr('class', badgeClass + ' badge-status').text(badgeText)
+
+                                toastr.success(response.message)
+                            }
+                        },
+                        error: function(error) {
+                            toastr.error('Cập nhật trạng thái thất bại!')
+                        }
+                    })
+                })
+            })
+        </script>
+    @endpush
