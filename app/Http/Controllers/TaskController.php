@@ -12,11 +12,43 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::with('user')
-        ->orderBy('due_date', 'asc')
-        ->paginate(10);
+        $query = Task::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title','LIKE','%' . $request->search . '%')
+                ->orWhere('description','LIKE','%' . $request->search . '%');
+            });
+        }
+
+        // Status searching
+        if ($request->filled('status') && in_array($request->status,[
+            Task::NOT_STARTED, Task::IN_PROGRESS, Task::COMPLETED,
+        ])) {
+            $query->where('status',$request->status);
+        }
+
+        // Sort Option
+        switch($request->sort_option) {
+            case 'due_date_asc':
+                $query->orderBy('due_date','ASC');
+            break;
+            case 'due_date_desc':
+                $query->orderBy('due_date','DESC');
+            break;
+            case 'created_at_asc':
+                $query->orderBy('created_at','ASC');
+            break;
+            case 'created_at_desc':
+                $query->orderBy('created_at','DESC');
+            break;
+        }
+
+        $tasks = $query->with('user')->paginate(10)->appends($request->all());
+
         return view('tasks.index',compact('tasks'));
     }
 

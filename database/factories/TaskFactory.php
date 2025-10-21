@@ -31,6 +31,7 @@ class TaskFactory extends Factory
                 Task::COMPLETED,
             ]),
             'due_date' => $this->faker->dateTimeBetween('now', '+1 month'),
+            'created_at' => $this->faker->dateTimeBetween('-1 month', '+1 month'),
             'user_id' => $user->id
         ];
     }

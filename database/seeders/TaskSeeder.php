@@ -17,7 +17,6 @@ class TaskSeeder extends Seeder
     {
         DB::table('tasks')->truncate();
 
-        Task::factory()->count(20)->create();
-
+        Task::factory()->count(50)->create();
     }
 }
